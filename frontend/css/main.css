@@ -1,0 +1,19 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 10px; }
+.layout { display: grid; grid-template-columns: 300px 1fr 280px; height: calc(100vh - 92px); gap: 10px; }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.sidebar { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.search-input, input, textarea, button { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+button { cursor: pointer; background: var(--accent); color: #fff; }
+.chat-list { overflow: auto; }
+.chat-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.chat-item:hover { background: rgba(0,0,0,0.03); }
+.chat-header { padding: 12px; border-bottom: 1px solid var(--border); }
+.messages { height: calc(100vh - 220px); overflow: auto; padding: 12px; background: var(--chat-bg); background-image: var(--chat-background-image); background-size: cover; background-position: center; }
+.message { background: var(--chat-bubble); border: 1px solid var(--border); border-radius: 12px; padding: 8px; margin-bottom: 8px; }
+.message.own { background: var(--chat-bubble-own); }
+.meta { font-size: 12px; color: var(--muted); }
+.composer { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
+.auth-wrap { max-width: 420px; margin: 10vh auto; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.hidden { display: none; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .right-panel { display: none; } }
