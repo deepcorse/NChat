@@ -42,4 +42,5 @@ export const api = {
   createStory: (form) => req('/stories', { method: 'POST', body: form }),
   story: (id) => req(`/stories/${id}`),
   deleteStory: (id) => req(`/stories/${id}`, { method: 'DELETE' }),
+  stickerPacks: () => req('/stickers'),
 };

@@ -2,6 +2,7 @@ from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import UniqueConstraint
 
+
 db = SQLAlchemy()
 
 
@@ -57,11 +58,13 @@ class Message(db.Model):
     file_type = db.Column(db.String(20))
     file_name = db.Column(db.String(255))
     file_size = db.Column(db.Integer)
+    reply_to_id = db.Column(db.Integer, db.ForeignKey("messages.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
     deleted = db.Column(db.Boolean, default=False, nullable=False)
 
     chat = db.relationship("Chat", backref="messages")
     sender = db.relationship("User", backref="messages")
+    reply_to = db.relationship("Message", remote_side=[id], uselist=False)
 
 
 class Reaction(db.Model):

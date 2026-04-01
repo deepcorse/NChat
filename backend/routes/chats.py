@@ -1,9 +1,9 @@
 from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import and_, or_
+from sqlalchemy import or_
 
 from ..models import Chat, ChatParticipant, ChannelSubscription, Message, User, db
-from ..utils import save_upload
+from ..utils import build_message_payload, is_allowed_sticker_path, save_upload
 
 chats_bp = Blueprint("chats", __name__)
 
@@ -89,21 +89,7 @@ def chat_messages(chat_id):
         query = query.filter(Message.id < before_id)
 
     items = query.order_by(Message.id.desc()).limit(limit).all()
-    return jsonify([
-        {
-            "id": m.id,
-            "chat_id": m.chat_id,
-            "sender_id": m.sender_id,
-            "text": m.text,
-            "file_url": m.file_url,
-            "file_type": m.file_type,
-            "file_name": m.file_name,
-            "file_size": m.file_size,
-            "created_at": m.created_at.isoformat(),
-            "reactions": [{"user_id": r.user_id, "type": r.reaction_type} for r in m.reactions],
-        }
-        for m in reversed(items)
-    ])
+    return jsonify([build_message_payload(m) for m in reversed(items)])
 
 
 @chats_bp.post("/<int:chat_id>/messages")
@@ -125,23 +111,36 @@ def send_message(chat_id):
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
 
-    if not text and not file_data:
+    reply_to_id = request.form.get("reply_to_id", type=int)
+    reply_to_message = None
+    if reply_to_id:
+        reply_to_message = Message.query.filter_by(id=reply_to_id, chat_id=chat_id, deleted=False).first()
+        if not reply_to_message:
+            return jsonify({"error": "Сообщение для ответа не найдено"}), 400
+
+    sticker_path = (request.form.get("sticker_path") or "").strip()
+    sticker_url = None
+    if sticker_path:
+        if not is_allowed_sticker_path(sticker_path):
+            return jsonify({"error": "Стикер не найден"}), 400
+        sticker_url = f"/stickers/{sticker_path}"
+
+    if not text and not file_data and not sticker_url:
         return jsonify({"error": "Пустое сообщение"}), 400
 
     msg = Message(
         chat_id=chat_id,
         sender_id=user_id,
         text=text,
-        file_url=file_data["url"] if file_data else None,
-        file_type=file_data["file_type"] if file_data else None,
-        file_name=file_data["file_name"] if file_data else None,
+        file_url=sticker_url or (file_data["url"] if file_data else None),
+        file_type="sticker" if sticker_url else (file_data["file_type"] if file_data else None),
+        file_name=sticker_path if sticker_url else (file_data["file_name"] if file_data else None),
         file_size=file_data["file_size"] if file_data else None,
+        reply_to_id=reply_to_message.id if reply_to_message else None,
     )
     db.session.add(msg)
     db.session.commit()
-    current_app.socketio.emit(
-        "new_message",
-        {"id": msg.id, "chat_id": chat_id, "sender_id": user_id, "text": msg.text, "file_url": msg.file_url},
-        room=f"chat_{chat_id}",
-    )
-    return jsonify({"id": msg.id, "chat_id": chat_id, "text": msg.text, "created_at": msg.created_at.isoformat()}), 201
+
+    payload = build_message_payload(msg)
+    current_app.socketio.emit("new_message", payload, room=f"chat_{chat_id}")
+    return jsonify(payload), 201

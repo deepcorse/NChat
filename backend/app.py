@@ -1,10 +1,12 @@
 import os
 import sys
+
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_wtf.csrf import CSRFProtect
 from flask_socketio import SocketIO
+from sqlalchemy import text
 
 # Поддерживаем оба способа запуска:
 # 1) python -m backend.app
@@ -20,6 +22,7 @@ if __package__ is None or __package__ == "":
     from backend.routes.groups import groups_bp
     from backend.routes.messages import messages_bp
     from backend.routes.reactions import reactions_bp
+    from backend.routes.stickers import stickers_bp
     from backend.routes.stories import stories_bp
     from backend.routes.users import users_bp
     from backend.websocket import register_socket_handlers
@@ -33,9 +36,18 @@ else:
     from .routes.groups import groups_bp
     from .routes.messages import messages_bp
     from .routes.reactions import reactions_bp
+    from .routes.stickers import stickers_bp
     from .routes.stories import stories_bp
     from .routes.users import users_bp
     from .websocket import register_socket_handlers
+
+
+def _ensure_reply_to_column():
+    cols = db.session.execute(text("PRAGMA table_info(messages)")).fetchall()
+    col_names = {col[1] for col in cols}
+    if "reply_to_id" not in col_names:
+        db.session.execute(text("ALTER TABLE messages ADD COLUMN reply_to_id INTEGER"))
+        db.session.commit()
 
 
 def create_app():
@@ -62,10 +74,16 @@ def create_app():
     app.register_blueprint(messages_bp, url_prefix="/api/messages")
     app.register_blueprint(reactions_bp, url_prefix="/api/messages")
     app.register_blueprint(stories_bp, url_prefix="/api/stories")
+    app.register_blueprint(stickers_bp, url_prefix="/api/stickers")
 
     @app.route("/uploads/<path:filename>")
     def uploads(filename):
         return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+    @app.route("/stickers/<path:filename>")
+    def stickers(filename):
+        stickers_dir = os.path.join(app.root_path, "stickers")
+        return send_from_directory(stickers_dir, filename)
 
     @app.route("/")
     def root():
@@ -77,6 +95,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        _ensure_reply_to_column()
 
     return app, socketio
 
