@@ -14,6 +14,7 @@ if __package__ is None or __package__ == "":
     from backend.auth import auth_bp
     from backend.config import Config
     from backend.models import db
+    from backend.routes.admin import admin_bp
     from backend.routes.channels import channels_bp
     from backend.routes.chats import chats_bp
     from backend.routes.groups import groups_bp
@@ -26,6 +27,7 @@ else:
     from .auth import auth_bp
     from .config import Config
     from .models import db
+    from .routes.admin import admin_bp
     from .routes.channels import channels_bp
     from .routes.chats import chats_bp
     from .routes.groups import groups_bp
@@ -52,6 +54,7 @@ def create_app():
     register_socket_handlers(socketio)
 
     app.register_blueprint(auth_bp, url_prefix="/api")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(users_bp, url_prefix="/api/users")
     app.register_blueprint(chats_bp, url_prefix="/api/chats")
     app.register_blueprint(groups_bp, url_prefix="/api/groups")

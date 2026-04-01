@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import or_
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..models import Chat, ChannelSubscription, User, db
 from ..utils import save_upload
@@ -75,3 +76,21 @@ def upload_avatar():
     user.avatar_url = saved["url"]
     db.session.commit()
     return jsonify({"avatar_url": user.avatar_url})
+
+
+@users_bp.patch("/me/password")
+@jwt_required()
+def change_password():
+    user = User.query.get_or_404(int(get_jwt_identity()))
+    data = request.get_json() or {}
+    old_password = data.get("old_password") or ""
+    new_password = data.get("new_password") or ""
+
+    if len(new_password) < 6:
+        return jsonify({"error": "Новый пароль должен содержать минимум 6 символов"}), 400
+    if not check_password_hash(user.password_hash, old_password):
+        return jsonify({"error": "Старый пароль указан неверно"}), 403
+
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+    return jsonify({"message": "Пароль обновлён"})

@@ -5,6 +5,10 @@
   --muted: #6e7685;
   --accent: #5b7cfa;
   --border: #e4e7ef;
+  --chat-bg: #eef2fb;
+  --chat-bubble: #ffffff;
+  --chat-bubble-own: #dfe8ff;
+  --chat-background-image: none;
 }
 
 html[data-theme='dark'] {
@@ -14,4 +18,8 @@ html[data-theme='dark'] {
   --muted: #95a0b3;
   --accent: #7a98ff;
   --border: #2a3648;
+  --chat-bg: #141c28;
+  --chat-bubble: #1f2b3a;
+  --chat-bubble-own: #2b3c57;
+  --chat-background-image: none;
 }

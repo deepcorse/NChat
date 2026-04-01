@@ -2,7 +2,7 @@ import { api } from './api.js';
 import { reactionPicker } from './reactions.js';
 import { toast } from './utils.js';
 
-export function chatView({ onDelete }) {
+export function chatView({ onDelete, currentUserId }) {
   const box = document.createElement('div');
   box.className = 'panel';
   box.innerHTML = `
@@ -27,7 +27,7 @@ export function chatView({ onDelete }) {
 
   function messageNode(m, chatId) {
     const el = document.createElement('div');
-    el.className = 'message';
+    el.className = `message ${m.sender_id === currentUserId ? 'own' : ''}`;
     el.innerHTML = `<div>${m.text || ''}</div><div class='meta'>#${m.id} · ${new Date(m.created_at).toLocaleString()}</div>`;
     if (m.file_url) {
       if (m.file_type === 'image') el.innerHTML += `<img src='${m.file_url}' style='max-width:220px;border-radius:8px' />`;

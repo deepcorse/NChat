@@ -12,6 +12,10 @@ async function req(path, options = {}) {
   return data;
 }
 
+async function adminReq(path, adminPassword) {
+  return req(path, { headers: { 'X-Admin-Panel-Password': adminPassword } });
+}
+
 export const api = {
   register: (payload) => req('/register', { method: 'POST', body: JSON.stringify(payload) }),
   login: (payload) => req('/login', { method: 'POST', body: JSON.stringify(payload) }),
@@ -30,6 +34,10 @@ export const api = {
   subscribe: (id) => req(`/channels/${id}/subscribe`, { method: 'POST' }),
   patchMe: (payload) => req('/users/me', { method: 'PATCH', body: JSON.stringify(payload) }),
   avatar: (form) => req('/users/me/avatar', { method: 'POST', body: form }),
+  changePassword: (payload) => req('/users/me/password', { method: 'PATCH', body: JSON.stringify(payload) }),
+  adminSettings: (adminPassword) => adminReq('/admin/settings', adminPassword),
+  adminUsers: (adminPassword) => adminReq('/admin/users', adminPassword),
+  adminUserChats: (adminPassword, userId) => adminReq(`/admin/users/${userId}/chats`, adminPassword),
   storiesFeed: () => req('/stories/feed'),
   createStory: (form) => req('/stories', { method: 'POST', body: form }),
   story: (id) => req(`/stories/${id}`),

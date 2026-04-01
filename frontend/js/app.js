@@ -7,6 +7,7 @@ import { bindSearch } from './search.js';
 import { profileModal } from './profile.js';
 import { initTheme, themeControls } from './theme.js';
 import { renderStories } from './stories.js';
+import { openAdminPanel } from './admin.js';
 import { toast } from './utils.js';
 
 initTheme();
@@ -29,6 +30,7 @@ async function renderMessenger() {
         <button id='new-group'>+ Группа</button>
         <button id='new-channel'>+ Канал</button>
         <button id='profile'>Профиль</button>
+        <button id='admin-panel'>Админ-панель</button>
         <div id='stories'></div>
         <div class='chat-list' id='chat-list'></div>
       </aside>
@@ -36,7 +38,7 @@ async function renderMessenger() {
       <aside class='panel sidebar right-panel' id='right-panel'></aside>
     </div>`;
 
-  const chat = chatView({});
+  const chat = chatView({ currentUserId: me.id });
   document.getElementById('chat-main').appendChild(chat.el);
 
   const chatList = document.getElementById('chat-list');
@@ -62,6 +64,7 @@ async function renderMessenger() {
   document.getElementById('new-group').onclick = () => document.body.appendChild(createGroupModal(renderMessenger));
   document.getElementById('new-channel').onclick = () => document.body.appendChild(createChannelModal(renderMessenger));
   document.getElementById('profile').onclick = () => document.body.appendChild(profileModal(me, renderMessenger));
+  document.getElementById('admin-panel').onclick = () => openAdminPanel();
   document.getElementById('right-panel').appendChild(themeControls());
 
   if (socket) {
